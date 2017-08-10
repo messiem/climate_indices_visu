@@ -2,10 +2,13 @@ library(tidyverse)
 library(shiny)
 
 
-# Read data
+# Read Mset
+Mset <- read_delim(file="http://www3.mbari.org/science/upper-ocean-systems/biological-oceanography/GlobalModes/Mset.txt",comment="%",delim="\t")
+Mset$time <- as.Date(paste(Mset$YEAR,Mset$MONTH,rep(15,length(Mset$YEAR))),format="%Y %m %d")
+
+# Read other climate indices
 indices <- read_csv(file="http://www3.mbari.org/science/upper-ocean-systems/biological-oceanography/GlobalModes/climate_indices.csv",comment="%")
-nb_time <- length(indices$year)
-indices$time <- as.Date(paste(indices$year,indices$month,rep(15,nb_time)),format="%Y %m %d")
+indices$time <- as.Date(paste(indices$year,indices$month,rep(15,length(indices$year))),format="%Y %m %d")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
