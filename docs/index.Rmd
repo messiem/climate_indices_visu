@@ -5,9 +5,7 @@ output:
   html_notebook: default
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+This document reproduces the different steps followed before generating the shiny app.
 
 ##Including relevant libraries
 
@@ -17,25 +15,23 @@ library(tidyverse)
 
 ##Loading indices file
 ```{r}
+Mset <- read_delim(file="http://www3.mbari.org/science/upper-ocean-systems/biological-oceanography/GlobalModes/Mset.txt",comment="%",delim="\t")
+Mset$time <- as.Date(paste(Mset$YEAR,Mset$MONTH,rep(15,length(Mset$YEAR))),format="%Y %m %d")
 indices <- read_csv(file="http://www3.mbari.org/science/upper-ocean-systems/biological-oceanography/GlobalModes/climate_indices.csv",comment="%")
 nb_time <- length(indices$year)
 indices$time <- as.Date(paste(indices$year,indices$month,rep(15,nb_time)),format="%Y %m %d")
 ```
 
-##Testing date format
+
+##Plotting MEI & M1
+
 ```{r}
-as.Date(paste(2015,5,1),format="%Y %m %d")
+plot(indices$time,indices$MEI,type="l",xlab="Time",ylab="Index")
+points(Mset$time,Mset$M1,type="l",col="red")
 ```
 
 
-##Plotting MEI
-
-```{r}
-plot(indices$time,indices$MEI,type="l")
-```
-
-
-##Tests with varname & shading
+## Testing the use of varname & shading
 
 Note: impossible à ce niveau de faire le shading rouge/bleu. Nécessite de rajouter des points sur la ligne pour fermer les polygones correctement.
 
@@ -50,5 +46,51 @@ y0 <- rep(0,nb_time)
 plot(x,t(indices[,indexname1]),type="l",xlab="Time",ylab=indexname1)
 polygon(c(x[iok1],rev(x[iok1])),c(y0[iok1],rev(t(indices[iok1,indexname1]))),col="skyblue")
 points(x,t(indices[,indexname2]),type="l",col="red")
+```
+## Testing 2 Y-axis
+
+### Reproducing https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/ 
+
+```{r}
+set.seed(2015-04-13)
+
+d = data.frame(x =seq(1,10),
+           n = c(0,0,1,2,3,4,4,5,6,6),
+           logp = signif(-log10(runif(10)), 2))
+par(mar = c(5,5,2,5))
+with(d, plot(x, logp, type="l", col="red3"))
+par(new = T)
+with(d, plot(x, n, axes=F, xlab=NA, ylab=NA))
+axis(side = 4)
+mtext(side = 4, line = 3, 'Number genes selected')
+legend("topleft",
+       legend=c(expression(-log[10](italic(p))), "N genes"),
+       lty=c(1,0), pch=c(NA, 16), col=c("red3", "black"))
+```
+
+
+### With the climate time series
+
+```{r}
+indexname1 <- "M1"
+indexname2 <- "MEI"
+iok1 <- !is.na(Mset[,indexname1])
+x <- Mset$time
+y0 <- rep(0,length(Mset$YEAR))
+par(mar = c(5,5,2,5))
+plot(x,t(Mset[,indexname1]),type="l",xlab="Time",ylab=indexname1)
+par(new=T)
+with(indices,plot(time,MEI,type="l",axes=F,xlab=NA,ylab=NA,col="red",pch=16,cex=1.2))
+#plot(indices$time,t(indices[,indexname2]),type="l",axes=F,xlab=NA, ylab=NA,col="red")
+axis(side = 4, col="red")
+mtext(side = 4, line = 3, indexname2,col="red")
+legend("topleft",legend=c(indexname1,indexname2),lty=c(1,1),col=c("black", "red"))
+```
+
+## Testing ggplot2
+
+```{r}
+indexname1 <- "M1"
+ggplot(Mset, aes(x = time, y=Index)) + geom_line(aes(y = eval(as.name(indexname1))))
 ```
 
