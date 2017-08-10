@@ -1,0 +1,54 @@
+---
+title: "Climate Indices Notebook"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+##Including relevant libraries
+
+```{r}
+library(tidyverse)
+```
+
+##Loading indices file
+```{r}
+indices <- read_csv(file="http://www3.mbari.org/science/upper-ocean-systems/biological-oceanography/GlobalModes/climate_indices.csv",comment="%")
+nb_time <- length(indices$year)
+indices$time <- as.Date(paste(indices$year,indices$month,rep(15,nb_time)),format="%Y %m %d")
+```
+
+##Testing date format
+```{r}
+as.Date(paste(2015,5,1),format="%Y %m %d")
+```
+
+
+##Plotting MEI
+
+```{r}
+plot(indices$time,indices$MEI,type="l")
+```
+
+
+##Tests with varname & shading
+
+Note: impossible à ce niveau de faire le shading rouge/bleu. Nécessite de rajouter des points sur la ligne pour fermer les polygones correctement.
+
+```{r}
+indexname1 <- "PDO"
+indexname2 <- "NPGO"
+iok1 <- !is.na(indices[,indexname1])
+ipos1 <- indices[,indexname1]>0 & !is.na(indices[,indexname1])
+ineg1 <- indices[,indexname1]<0 & !is.na(indices[,indexname1])
+x <- indices$time
+y0 <- rep(0,nb_time)
+plot(x,t(indices[,indexname1]),type="l",xlab="Time",ylab=indexname1)
+polygon(c(x[iok1],rev(x[iok1])),c(y0[iok1],rev(t(indices[iok1,indexname1]))),col="skyblue")
+points(x,t(indices[,indexname2]),type="l",col="red")
+```
+
