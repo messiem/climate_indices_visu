@@ -47,9 +47,10 @@ plot(x,t(indices[,indexname1]),type="l",xlab="Time",ylab=indexname1)
 polygon(c(x[iok1],rev(x[iok1])),c(y0[iok1],rev(t(indices[iok1,indexname1]))),col="skyblue")
 points(x,t(indices[,indexname2]),type="l",col="red")
 ```
+
 ## Testing 2 Y-axis
 
-### Reproducing https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/ 
+#### Reproducing https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/ 
 
 ```{r}
 set.seed(2015-04-13)
@@ -69,7 +70,7 @@ legend("topleft",
 ```
 
 
-### With the climate time series
+#### With the climate time series
 
 ```{r}
 indexname1 <- "M1"
