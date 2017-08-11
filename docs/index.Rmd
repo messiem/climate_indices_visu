@@ -10,7 +10,8 @@ This document reproduces the different steps followed before generating the shin
 ##Including relevant libraries
 
 ```{r}
-library(tidyverse)
+library(tidyverse)  # includes ggplot2 and readr
+library(plotly)     # interactive plots
 ```
 
 ##Loading indices file
@@ -33,8 +34,6 @@ points(Mset$time,Mset$M1,type="l",col="red")
 
 ## Testing the use of varname & shading
 
-Note: impossible à ce niveau de faire le shading rouge/bleu. Nécessite de rajouter des points sur la ligne pour fermer les polygones correctement.
-
 ```{r}
 indexname1 <- "PDO"
 indexname2 <- "NPGO"
@@ -50,27 +49,7 @@ points(x,t(indices[,indexname2]),type="l",col="red")
 
 ## Testing 2 Y-axis
 
-#### Reproducing https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/ 
-
-```{r}
-set.seed(2015-04-13)
-
-d = data.frame(x =seq(1,10),
-           n = c(0,0,1,2,3,4,4,5,6,6),
-           logp = signif(-log10(runif(10)), 2))
-par(mar = c(5,5,2,5))
-with(d, plot(x, logp, type="l", col="red3"))
-par(new = T)
-with(d, plot(x, n, axes=F, xlab=NA, ylab=NA))
-axis(side = 4)
-mtext(side = 4, line = 3, 'Number genes selected')
-legend("topleft",
-       legend=c(expression(-log[10](italic(p))), "N genes"),
-       lty=c(1,0), pch=c(NA, 16), col=c("red3", "black"))
-```
-
-
-#### With the climate time series
+Based on https://www.r-bloggers.com/r-single-plot-with-two-different-y-axes/ 
 
 ```{r}
 indexname1 <- "M1"
@@ -88,10 +67,41 @@ mtext(side = 4, line = 3, indexname2,col="red")
 legend("topleft",legend=c(indexname1,indexname2),lty=c(1,1),col=c("black", "red"))
 ```
 
-## Testing ggplot2
+## Testing ggplot2 - area plot, double axis, interactive plot
 
 ```{r}
-indexname1 <- "M1"
-ggplot(Mset, aes(x = time, y=Index)) + geom_line(aes(y = eval(as.name(indexname1))))
+indexname1 <- "M3"
+indexname2 <- "PDO"
+max1 <- max(Mset[,indexname1],na.rm=TRUE)
+max2 <- max(indices[,indexname2],na.rm=TRUE)
+Mset[,"varpos"] <- Mset[,indexname1]
+Mset[,"varneg"] <- Mset[,indexname1]
+
+Mset$varpos[which(Mset$varpos > 0)] <- rep(0, length(which(Mset$varpos > 0)))
+Mset$varneg[which(Mset$varneg < 0)] <- rep(0, length(which(Mset$varneg < 0)))
+
+commonxM <- Mset$time %in% indices$time
+commonxI <- indices$time %in% Mset$time
+subsetM <- Mset[commonxM,indexname1]
+subsetI <- indices[commonxI,indexname2]
+iok1 <- !is.na(subsetM) & !is.na(subsetI)
+r=cor(subsetM[iok1,],subsetI[iok1,])
+legname <- paste(indexname2," (r = ",toString(floor(r*100)/100),")",sep="")
+
+p <- ggplot() +
+  geom_area(data = Mset, aes(x=time, y=varpos), fill="blue") +
+  geom_area(data = Mset, aes(x=time, y=varneg), fill="red") +
+  geom_line(data = indices, aes(x=time, y=eval(as.name(indexname2))/(max2/max1), color=legname),size=0.5) +
+  scale_y_continuous(sec.axis = sec_axis(trans = ~.*(max2/max1),name = indexname2)) +
+  scale_x_date(limits = c(min(Mset$time),max(Mset$time)),expand=c(0,0)) +
+  labs(x  ="Time", y = indexname1) +
+  theme(legend.position=c(0.15, 0.95),legend.key.width=unit(3,"line"),legend.background = element_rect(fill="transparent"),
+        legend.text=element_text(size=11)) +
+  scale_colour_manual("", 
+                      breaks = c(legname),
+                      values = c("black"))
+p2=plotly_build(p)   
+style(p2) %>% layout( legend = list(x = 0.01, y = 1) )   # needed because ggplotly removes the legend position
 ```
+
 
