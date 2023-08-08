@@ -103,7 +103,7 @@ p <- ggplot() +
                       values = c("black"))
 p2 <- plotly_build(p)
 #style(p2) %>% layout(legend = list(x = 0.01, y = 1))   # needed because ggplotly removes the legend position
-print(p2)
+p2
 ```
 
 
