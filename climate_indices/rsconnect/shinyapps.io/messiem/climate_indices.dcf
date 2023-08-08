@@ -2,9 +2,7 @@ name: climate_indices
 title: climate_indices
 account: messiem
 server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
 appId: 204037
-bundleId: 937961
+bundleId: 7545630
 url: https://messiem.shinyapps.io/climate_indices/
-when: 1502487886.71361
-asMultiple: FALSE
-asStatic: FALSE
